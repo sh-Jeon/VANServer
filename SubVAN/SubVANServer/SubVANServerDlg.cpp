@@ -195,10 +195,14 @@ LRESULT CSubVANServerDlg::OnAddResponseListItem(WPARAM wParam, LPARAM lParam)
 
 LRESULT CSubVANServerDlg::OnTryToConnectDB(WPARAM wParam, LPARAM lParam)
 {
-	//if (FALSE == theApp.GetDBManager()->Open()) {
-	//	::MessageBox(NULL, L"DB 서버에 접속할 수 없습니다.", L"Error", MB_OK);
-	//	//PostMessage(WM_QUIT, 0, 0);
-	//}
+	if (FALSE == theApp.GetDBManager()->Open()) {
+		::MessageBox(NULL, L"DB 서버에 접속할 수 없습니다.", L"Error", MB_OK);
+#ifndef _DEBUG
+		PostMessage(WM_QUIT, 0, 0);
+#endif
+	}
+
+	SetTimer(TIMER_ICON_DISPLAY, 500, NULL);
 
 	return 0;
 }
@@ -331,8 +335,6 @@ BOOL CSubVANServerDlg::OnInitDialog()
 	m_PGServer.InitServer();
 
 	SetProcessIDToMonitorService();
-
-	SetTimer(TIMER_ICON_DISPLAY, 500, NULL);
 
 	PostMessage(WM_CONNECT_DB, 0, 0);
 
@@ -582,7 +584,12 @@ void CSubVANServerDlg::OnNMDblclkMonList(NMHDR *pNMHDR, LRESULT *pResult)
 void CSubVANServerDlg::CheckDoBatchJob()
 {
 	static DWORD lastTick = GetTickCount();
+
+#ifdef _DEBUG
+	if (GetTickCount() - lastTick > 15000) {
+#else
 	if (GetTickCount() - lastTick > 60000 * 5) {
+#endif
 		lastTick = GetTickCount();
 
 		SYSTEMTIME cTime;
@@ -596,7 +603,7 @@ void CSubVANServerDlg::CheckDoBatchJob()
 			m_DailyBatch.m_bDoneBatchProcess = FALSE;
 		}
 
-		if (cTime.wHour == 6 && cTime.wMinute > 00 && FALSE == m_DailyBatch.m_bDoneBillProcess) {
+		if (cTime.wHour == 20 && cTime.wMinute > 30 && FALSE == m_DailyBatch.m_bDoneBillProcess) {
 			m_DailyBatch.ProcessGenerateVanBillList();
 		}
 

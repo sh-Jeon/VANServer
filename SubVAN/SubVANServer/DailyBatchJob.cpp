@@ -96,6 +96,8 @@ void CDailyBatchJob::ProcessBatchJob(void)
 {
 	USES_CONVERSION;
 
+	theApp.AddLog("Process BatchJob------");
+
 	TCHAR szCode[255];
 	m_strOrgCode = L"0000010";
 	if (::GetPrivateProfileString(L"BATCH", L"BarcodeOrgCode", _T(""), szCode, sizeof(szCode), g_strRegPath))
@@ -359,6 +361,8 @@ void CDailyBatchJob::ProcessGenerateVanBillList()
 {
 	//////////// 정산처리
 	// CN03
+	theApp.AddLog("Process GenerateVanBillList------");
+
 	TCHAR szBatchFilePath[MAX_PATH];
 	if (::GetPrivateProfileString(L"BATCH", L"CN03Path", _T(""), szBatchFilePath, sizeof(szBatchFilePath), g_strRegPath))
 	{
