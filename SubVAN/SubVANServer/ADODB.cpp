@@ -55,14 +55,14 @@ BOOL CADODB::Open()
 	strServer += szUID;
 	strServer += ";Password=tlaxmfk1@#$;";
 
-	//g_AgentWnd.AddLog(L"Try Connect to db");
-
 	_bstr_t strCnn(strServer);
 
 	::CoInitialize(NULL);
 	if FAILED(m_pConn.CreateInstance(__uuidof(Connection)))
 	{
 		m_strErrorMessage="Fail to Create Instance for ADO Connect ptr";
+		AddLog(m_strErrorMessage);
+
 		//g_AgentWnd.AddLog(L"%s", m_strErrorMessage);
 		return FALSE;
 	}
@@ -213,7 +213,11 @@ CString CADODB::Call_BarCodePurchaseRequest(CVANProtocol *pClient, BOOL bRequest
 	}
 	catch(_com_error &e) {
 		CString s = (LPCTSTR)e.Description();
-		return L"";
+
+		CString strErrorLog;
+		strErrorLog.Format(L"Call_BarCodePurchaseRequest DB Error : %s ------", s);
+		AddLog(strErrorLog);
+
 	}
 
 	return strResult;
@@ -307,7 +311,13 @@ CString CADODB::Call_BarCodeRefundRequest(CVANProtocol *pClient, BOOL bRequest)
 		pCommand.Release();
 	}
 	catch(_com_error &e) {
+		USES_CONVERSION;
 		CString s = (LPCTSTR)e.Description();
+
+		CString strErrorLog;
+		strErrorLog.Format(L"Call_BarCodeRefundRequest DB Error : %s ------", s);
+		AddLog(strErrorLog);
+
 		return L"";
 	}
 
@@ -405,6 +415,11 @@ CString CADODB::Call_CouponApproveRequest(CVANProtocol *pClient, BOOL bRequest)
 	}
 	catch(_com_error &e) {
 		CString s = (LPCTSTR)e.Description();
+
+		CString strErrorLog;
+		strErrorLog.Format(L"Call_CouponApproveRequest DB Error : %s ------", s);
+		AddLog(strErrorLog);
+
 		return L"";
 	}
 
@@ -503,6 +518,10 @@ CString CADODB::Call_CouponStatusRequest(CVANProtocol *pClient, BOOL bRequest)
 	}
 	catch(_com_error &e) {
 		CString s = (LPCTSTR)e.Description();
+
+		CString strErrorLog;
+		strErrorLog.Format(L"Call_CouponStatusRequest DB Error : %s ------", s);
+		AddLog(strErrorLog);
 	}
 
 	return strResult;
@@ -559,6 +578,10 @@ void CADODB::GetSysRefundList(VEC_REFUND_LIST *pRefundList)
 	{
 		CString s = (LPCTSTR)e.Description();
 
+		CString strErrorLog;
+		strErrorLog.Format(L"GetSysRefundList DB Error : %s ------", s);
+		AddLog(strErrorLog);
+
 		if (0 <= s.Find(L"ORA-03114") || 0 <= s.Find(L"ORA-03113"))
 		{
 			Close();
@@ -571,6 +594,8 @@ void CADODB::GetSysRefundList(VEC_REFUND_LIST *pRefundList)
 
 void CADODB::GetSysRefundNoReplyList(VEC_REFUND_NO_REPLY_LIST *pRefundList)
 {
+	USES_CONVERSION;
+
 	if(IsConnect() != TRUE) {
 		if (FALSE == Open()) {
 			return;
@@ -608,6 +633,10 @@ void CADODB::GetSysRefundNoReplyList(VEC_REFUND_NO_REPLY_LIST *pRefundList)
 	{
 		CString s = (LPCTSTR)e.Description();
 
+		CString strErrorLog;
+		strErrorLog.Format(L"GetSysRefundNoReplyList DB Error : %s ------", s);
+		AddLog(strErrorLog);
+
 		if (0 <= s.Find(L"ORA-03114") || 0 <= s.Find(L"ORA-03113"))
 		{
 			Close();
@@ -619,6 +648,8 @@ void CADODB::GetSysRefundNoReplyList(VEC_REFUND_NO_REPLY_LIST *pRefundList)
 
 void CADODB::GetCouponNotReplyList(VEC_COUPON_NOT_REPLY_LIST *pCouponList)
 {
+	USES_CONVERSION;
+
 	if(IsConnect() != TRUE) {
 		if (FALSE == Open()) {
 			return;
@@ -661,6 +692,10 @@ void CADODB::GetCouponNotReplyList(VEC_COUPON_NOT_REPLY_LIST *pCouponList)
 	catch(_com_error &e)
 	{
 		CString s = (LPCTSTR)e.Description();
+
+		CString strErrorLog;
+		strErrorLog.Format(L"GetCouponNotReplyList DB Error : %s ------", s);
+		AddLog(strErrorLog);
 
 		if (0 <= s.Find(L"ORA-03114") || 0 <= s.Find(L"ORA-03113"))
 		{
@@ -726,8 +761,17 @@ CString CADODB::Call_GenerateVanBillList(LPCTSTR fileName, LPCTSTR orgCode, VEC_
 		}
 		catch(_com_error &e) {
 			CString s = (LPCTSTR)e.Description();
+			CString strErrorLog;
+			strErrorLog.Format(L"Call_GenerateVanBillList DB Error : %s ------", s);
+			AddLog(strErrorLog);
 		}
 	}
 
 	return strResult;
+}
+
+void  CADODB::AddLog(LPCTSTR logString)
+{
+	USES_CONVERSION;
+	theApp.AddLog(T2A(logString));
 }

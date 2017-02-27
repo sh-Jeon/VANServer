@@ -407,13 +407,9 @@ void CDailyBatchJob::ProcessGenerateVanBillList()
 	}
 	::CloseHandle(hFile);
 	
-	ATLPath::FindFileName(strBatchFile);
-
-
 	if (vec_van_bill_data.size() > 0) {
 		theApp.GetDBManager()->Call_GenerateVanBillList(ATLPath::FindFileName(strBatchFile), m_strOrgCode, &vec_van_bill_data);
 	}
-
 
 	// 贸府等 颇老 颇老疙 函版
 	SYSTEMTIME cTime;

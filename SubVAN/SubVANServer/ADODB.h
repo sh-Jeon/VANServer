@@ -88,6 +88,9 @@ public:
 	void GetCouponNotReplyList(VEC_COUPON_NOT_REPLY_LIST *pCouponList);
 
 	CString Call_GenerateVanBillList(LPCTSTR fileName, LPCTSTR orgCode, VEC_ST_VAN_BILL_DATA *pVecBillData);
+
+private:
+	void AddLog(LPCTSTR logString);
 };
 
 inline CString getYesterDay() 
