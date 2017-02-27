@@ -1,0 +1,18 @@
+// SubVANService.idl : SubVANService의 IDL 소스입니다.
+//
+
+// 이 파일은 MIDL 도구에 의해 처리되어
+// 형식 라이브러리(SubVANService.tlb) 및 마샬링 코드가 생성됩니다.
+
+import "oaidl.idl";
+import "ocidl.idl";
+
+[
+	uuid(AFE997C6-2FAB-4FA4-AA57-2CEFB01C9A16),
+	version(1.0),
+	helpstring("SubVANService 1.0 형식 라이브러리")
+]
+library SubVANServiceLib
+{
+	importlib("stdole2.tlb");
+};

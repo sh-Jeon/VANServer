@@ -1,0 +1,143 @@
+#include "StdAfx.h"
+#include "PosClient.h"
+#include "SubVANServer.h"
+
+CPosClient::CPosClient(SOCKET clSock, CPGServer *pServer)
+{
+	m_sock = clSock;
+	m_pPGServer = pServer;
+}
+
+CPosClient::~CPosClient(void)
+{
+
+}
+
+// Response for POS
+void CPosClient::_MakeCmdResponsePacket(char *pData)
+{
+	int pos = 0;
+	_assignFieldValue(&pos, pData, m_pResponse->m_pktHeader.lenData, 4);
+	_assignFieldValue(&pos, pData, m_pRequest->m_pktHeader.VAN, 3);
+	_assignFieldValue(&pos, pData, m_pRequest->mSystemType, 3);
+	_assignFieldValue(&pos, pData, m_pResponse->mVANCode, 3);
+	_assignFieldValue(&pos, pData, m_pRequest->mTelReqType, 4);
+	
+	// POS에서 올라온 원래 전문번호는 그대로 사용 (P000###)
+	_assignFieldValue(&pos, pData, m_pRequest->mTelCode, 6);  
+	_assignFieldValue(&pos, pData, &m_pResponse->mSendFlag, 1);
+	_assignFieldValue(&pos, pData, m_pResponse->mStatus, 3);
+	_assignFieldValue(&pos, pData, m_pResponse->mTelRespType, 3);
+	_assignFieldValue(&pos, pData, m_pResponse->mSendDate, 8);
+	_assignFieldValue(&pos, pData, m_pResponse->mSendTime, 6);
+	_assignFieldValue(&pos, pData, m_pRequest->mTraceNo, 8);
+
+	// 공통부 filler 15자리 중 앞 8자리에 PG가 생성한 전문추적 번호를 넣음.
+	char PGTranceNO[16];
+	_snprintf_s(PGTranceNO, sizeof(PGTranceNO), "BB%06u0000000", m_PGTraceNO);
+	_assignFieldValue(&pos, pData, PGTranceNO, 15);
+
+	_assignFieldValue(&pos, pData, m_pResponse->mPurchaseDate, 8);
+	_assignFieldValue(&pos, pData, m_pResponse->mPurchaseTime, 6);
+	_assignFieldValue(&pos, pData, m_pResponse->mPosNo, 15);
+	_assignFieldValue(&pos, pData, m_pResponse->mPosName, 50);
+	_assignFieldValue(&pos, pData, m_pResponse->mBarcode, 20);
+	_assignFieldValue(&pos, pData, m_pResponse->mPrice, 12);
+	_assignFieldValue(&pos, pData, m_pResponse->mTID, 40);
+	_assignFieldValue(&pos, pData, m_pResponse->mAcceptNo, 13);
+	_assignFieldValue(&pos, pData, m_pResponse->mResponseMessage, 256);
+	_assignFieldValue(&pos, pData, NULL, 70);
+}
+
+void CPosClient::SendResultToPOS(PG_ERROR_CODE errCode)
+{
+	char *pSendData = new char[LEN_TEL+1];
+	ZeroMemory(pSendData, LEN_TEL+1);
+
+	// error code setting
+	switch (errCode) {
+		case ERROR_VAN_NORESPONSE :
+			memcpy(m_pResponse->mTelRespType, "S11", 3);
+			break;
+		case ERROR_INVALID_LENGTH :
+			memcpy(m_pResponse->mTelRespType, "S12", 3);
+			break;
+		case ERROR_CONNECTION :
+			memcpy(m_pResponse->mTelRespType, "S41", 3);
+			break;
+		case ERROR_SYSTEM :
+			memcpy(m_pResponse->mTelRespType, "S42", 3);
+			break;
+		case ERROR_WAIT :
+			memcpy(m_pResponse->mTelRespType, "S43", 3);
+			break;
+		case ERROR_DB :
+			memcpy(m_pResponse->mTelRespType, "S80", 3);
+			break;
+		case ERROR_DB_DUPLICATE :
+			memcpy(m_pResponse->mTelRespType, "S81", 3);
+			break;
+		case ERROR_DB_TRANSACTION :
+			memcpy(m_pResponse->mTelRespType, "S82", 3);
+			break;
+		case ERROR_DB_QUERY :
+			memcpy(m_pResponse->mTelRespType, "S89", 3);
+			break;
+		case ERROR_PROCESS :
+			memcpy(m_pResponse->mTelRespType, "S95", 3);
+			break;
+		case ERROR_INVALID_FORMAT :
+			memcpy(m_pResponse->mTelRespType, "S98", 3);
+			break;
+		case ERROR_ETC :
+			memcpy(m_pResponse->mTelRespType, "S99", 3);
+			break;
+	}
+	_MakeCmdResponsePacket(pSendData);
+	theApp.AddLog("PG->POS:%s", pSendData);
+
+	int nTotalSent = 0;
+	while (nTotalSent < LEN_TEL) {
+		int nSent = send(m_sock, pSendData + nTotalSent, LEN_TEL - nTotalSent, 0);
+		nTotalSent += nSent;
+		if (nSent == SOCKET_ERROR) break;
+	}
+
+	delete pSendData;
+}
+
+void CPosClient::SendResultToPOS(RES_CODE resCode)
+{
+	USES_CONVERSION;
+
+	char *pSendData = new char[LEN_TEL+1];
+	ZeroMemory(pSendData, LEN_TEL+1);
+
+	// error code setting
+	switch (resCode) {
+		case RES_TIMEOUT :
+			memcpy(m_pResponse->mTelRespType, "S11", 3);
+			break;
+	}
+
+	_MakeCmdResponsePacket(pSendData);
+	theApp.AddLog("PG->POS:%s", pSendData);
+
+	int nTotalSent = 0;
+	while (nTotalSent < LEN_TEL) {
+		int nSent = send(m_sock, pSendData + nTotalSent, LEN_TEL - nTotalSent, 0);
+		nTotalSent += nSent;
+		if (nSent == SOCKET_ERROR) break;
+	}
+
+	delete pSendData;
+}
+
+void CPosClient::CloseSocket() {
+	if (m_sock != INVALID_SOCKET)
+	{		
+		ATLTRACE(L"close socket\n");
+		closesocket(m_sock);
+		m_sock = INVALID_SOCKET;
+	}
+}
