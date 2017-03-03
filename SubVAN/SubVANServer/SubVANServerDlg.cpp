@@ -603,7 +603,7 @@ void CSubVANServerDlg::CheckDoBatchJob()
 			m_DailyBatch.m_bDoneBatchProcess = FALSE;
 		}
 
-		if (cTime.wHour == 6 && cTime.wMinute >= 0 && FALSE == m_DailyBatch.m_bDoneBillProcess) {
+		if (cTime.wHour == 6 && cTime.wMinute >= 30 && FALSE == m_DailyBatch.m_bDoneBillProcess) {
 			m_DailyBatch.ProcessGenerateVanBillList();
 		}
 

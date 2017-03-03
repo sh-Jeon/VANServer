@@ -124,7 +124,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	
 	// create file
 	CString strBatchFile;
-	strBatchFile.Format(L"%s\\CN01%s", szBatchFilePath, strYesterdayMMDD);
+	strBatchFile.Format(L"%s\\CN31%s", szBatchFilePath, strYesterdayMMDD);
 	HANDLE hFile = _CreateBatchFile(strBatchFile);
 
 	_WriteBatchRefundLog(hFile);
@@ -140,7 +140,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	}	
 
 	// create file
-	strBatchFile.Format(L"%s\\CN02%s", szBatchFilePath, strYesterdayMMDD);
+	strBatchFile.Format(L"%s\\CN32%s", szBatchFilePath, strYesterdayMMDD);
 	hFile = _CreateBatchFile(strBatchFile);
 
 	_WriteBatchRefundNoReplyLog(hFile);
@@ -176,7 +176,7 @@ void CDailyBatchJob::_WriteBatchRefundLog(HANDLE hFile)
 	memcpy(stRefundLogHeader.No, "0000000", 7);
 	memcpy(stRefundLogHeader.Date, T2A(getYesterDay()), 8);
 	memcpy(stRefundLogHeader.Code, T2A(m_strOrgCode), 7);
-	memcpy(stRefundLogHeader.ServiceType, "CN01", 4);
+	memcpy(stRefundLogHeader.ServiceType, "CN31", 4);
 	char space[172];
 	for (int i=0; i<172; i++) space[i] = ' ';
 	memcpy(stRefundLogHeader.Filler, space, 172);
@@ -235,7 +235,7 @@ void CDailyBatchJob::_WriteBatchRefundNoReplyLog(HANDLE hFile)
 	memcpy(stRefundLogHeader.No, "0000000", 7);
 	memcpy(stRefundLogHeader.Date, T2A(getYesterDay()), 8);
 	memcpy(stRefundLogHeader.Code, T2A(m_strOrgCode), 7);
-	memcpy(stRefundLogHeader.ServiceType, "CN02", 4);
+	memcpy(stRefundLogHeader.ServiceType, "CN32", 4);
 	char space[172];
 	for (int i=0; i<172; i++) space[i] = ' ';
 	memcpy(stRefundLogHeader.Filler, space, 172);

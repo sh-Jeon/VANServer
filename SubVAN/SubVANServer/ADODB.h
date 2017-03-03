@@ -43,6 +43,7 @@ typedef struct _SysCouponNotReply
 	CString strSerialNum;
 	CString strTradeType;
 	CString strReturnCode;
+	CString strTradeDate;
 	CString strTradeTime;
 	CString strTradeUniqueNum;
 	CString strBarcodeNum;

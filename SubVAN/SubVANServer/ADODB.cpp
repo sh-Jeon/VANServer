@@ -674,6 +674,7 @@ void CADODB::GetCouponNotReplyList(VEC_COUPON_NOT_REPLY_LIST *pCouponList)
 			stCoupon.strSerialNum = _FetchColumn(m_pRS, L"SerialNum");
 			stCoupon.strTradeType = _FetchColumn(m_pRS, L"TradeType");
 			stCoupon.strReturnCode = _FetchColumn(m_pRS, L"ReturnCode");
+			stCoupon.strTradeDate = _FetchColumn(m_pRS, L"TradeDate");
 			stCoupon.strTradeTime = _FetchColumn(m_pRS, L"TradeTime");
 			stCoupon.strTradeUniqueNum = _FetchColumn(m_pRS, L"TradeUniqueNum");
 			stCoupon.strBarcodeNum = _FetchColumn(m_pRS, L"BarcodeNum");
