@@ -26,7 +26,7 @@ typedef struct {
 	char DataType[2];
 	char SerialNo[7];
 	char OrgCode[3];
-	char Count[3];
+	char Count[7];
 	char Date[8];
 	char Filler[267];
 }ST_COUPON_LOG_HEADER;
@@ -36,7 +36,7 @@ typedef struct {
 	char DataType[2];
 	char SerialNo[7];
 	char OrgCode[3];
-	char Count[3];
+	char Count[7];
 	char Filler[275];
 }ST_COUPON_LOG_FOOTER;
 
@@ -161,7 +161,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	CString currentYear;
 	currentYear.Format(L"%04d", time.GetYear());
 	currentYear.Delete(0, 2);
-	strBatchFileDate.Format(L"%02d%02d%02d", currentYear, time.GetMonth(), time.GetDay());
+	strBatchFileDate.Format(L"%s%02d%02d", currentYear, time.GetMonth(), time.GetDay());
 
 	// create file
 	strBatchFile.Format(L"%s\\%s%s001", szBatchFilePath, L"sw1122", strBatchFileDate);
@@ -207,14 +207,19 @@ void CDailyBatchJob::_WriteBatchRefundLog(HANDLE hFile)
 		::WriteFile(hFile, T2A(vecRefundList[i].strTradeAmt), 12, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecRefundList[i].strTid), 40, &dwWritten, 0);
 
-		char szFiller[96];
-		for (int iFiller=0; iFiller<96; iFiller++) szFiller[iFiller] = ' ';
 		CString strFiller = vecRefundList[i].strFiller;
-		if (strFiller.GetLength()) {
-			memcpy(szFiller, T2A(strFiller), 96);
-		}
+		char *sFiller = NULL;
+		int nLen = WideCharToMultiByte(CP_ACP, 0, strFiller.GetBuffer(0), -1, sFiller, 0, NULL, NULL);
+		sFiller = new char[nLen+1];
+		WideCharToMultiByte(CP_ACP, 0, strFiller.GetBuffer(0), -1, sFiller, nLen, NULL, NULL);
 
-		::WriteFile(hFile, szFiller, 96, &dwWritten, 0);
+		char writeFiller[96];
+		ZeroMemory(writeFiller, 96);
+		memcpy(writeFiller, sFiller, nLen);
+
+		::WriteFile(hFile, writeFiller, 96, &dwWritten, 0);
+
+		delete sFiller;
 		//::WriteFile(hFile, "\r\n", 2, &dwWritten, 0);
 	}
 
@@ -267,14 +272,19 @@ void CDailyBatchJob::_WriteBatchRefundNoReplyLog(HANDLE hFile)
 		::WriteFile(hFile, T2A(vecRefundList[i].strOriTradeDate), 8, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecRefundList[i].strOriTid), 40, &dwWritten, 0);
 
-		char szFiller[48];
-		for (int iFiller=0; iFiller<48; iFiller++) szFiller[iFiller] = ' ';
 		CString strFiller = vecRefundList[i].strFiller;
-		if (strFiller.GetLength()) {
-			memcpy(szFiller, T2A(strFiller), 48);
-		}
+		char *sFiller = NULL;
+		int nLen = WideCharToMultiByte(CP_ACP, 0, strFiller.GetBuffer(0), -1, sFiller, 0, NULL, NULL);
+		sFiller = new char[nLen+1];
+		WideCharToMultiByte(CP_ACP, 0, strFiller.GetBuffer(0), -1, sFiller, nLen, NULL, NULL);
 
-		::WriteFile(hFile, szFiller, 96, &dwWritten, 0);
+		char writeFiller[48];
+		ZeroMemory(writeFiller, 48);
+		memcpy(writeFiller, sFiller, nLen);
+
+		::WriteFile(hFile, writeFiller, 48, &dwWritten, 0);
+
+		delete sFiller;
 		//::WriteFile(hFile, "\r\n", 2, &dwWritten, 0);
 	}
 
@@ -337,23 +347,39 @@ void CDailyBatchJob::_WriteBatchCouponNotReplyLog(HANDLE hFile)
 		::WriteFile(hFile, T2A(vecCouponList[i].strBarcodeNum), 20, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strTid), 40, &dwWritten, 0);
 
-		char szFranchiseName[50];
-		ZeroMemory(szFranchiseName, 50);
-		memcpy(szFranchiseName, T2A(vecCouponList[i].strFranchiseName), vecCouponList[i].strFranchiseName.GetLength());
-		::WriteFile(hFile, szFranchiseName, 50, &dwWritten, 0);
+		//char szFranchiseName[50];
+		//ZeroMemory(szFranchiseName, 50);
+		//char *mbscName = T2A(vecCouponList[i].strFranchiseName);
+		//memcpy(szFranchiseName, mbscName, strlen(mbscName));
+		//::WriteFile(hFile, vecCouponList[i].strFranchiseName, 50, &dwWritten, 0);
+		CString strFranchiseName = vecCouponList[i].strFranchiseName;
+		char *sName = NULL;
+		int nLen = WideCharToMultiByte(CP_ACP, 0, strFranchiseName.GetBuffer(0), -1, sName, 0, NULL, NULL);
+		sName = new char[nLen+1];
+		WideCharToMultiByte(CP_ACP, 0, strFranchiseName.GetBuffer(0), -1, sName, nLen, NULL, NULL);
+
+		::WriteFile(hFile, sName, 50, &dwWritten, 0);
+
+		delete sName;
+
+
 		::WriteFile(hFile, T2A(vecCouponList[i].strTradeAmt), 12, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strApproveNum), 13, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strProductCode), 20, &dwWritten, 0);
 
-		char szFiller[94];
-		for (int iFiller=0; iFiller<94; iFiller++) szFiller[iFiller] = ' ';
-		
 		CString strFiller = vecCouponList[i].strFiller;
-		if (strFiller.GetLength()) {
-			memcpy(szFiller, T2A(strFiller), strFiller.GetLength());
-		}
+		char *sFiller = NULL;
+		nLen = WideCharToMultiByte(CP_ACP, 0, strFiller.GetBuffer(0), -1, sFiller, 0, NULL, NULL);
+		sFiller = new char[nLen+1];
+		WideCharToMultiByte(CP_ACP, 0, strFiller.GetBuffer(0), -1, sFiller, nLen, NULL, NULL);
 
-		::WriteFile(hFile, szFiller, 94, &dwWritten, 0);
+		char writeFiller[94];
+		ZeroMemory(writeFiller, 94);
+		memcpy(writeFiller, sFiller, nLen);
+
+		::WriteFile(hFile, writeFiller, 94, &dwWritten, 0);
+
+		delete sFiller;
 		//::WriteFile(hFile, "\r\n", 2, &dwWritten, 0);
 	}
 

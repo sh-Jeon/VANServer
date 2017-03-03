@@ -603,7 +603,7 @@ void CADODB::GetSysRefundNoReplyList(VEC_REFUND_NO_REPLY_LIST *pRefundList)
 	}
 
 	CString strQuery;
-	strQuery.Format(L"select * from FN_GetSysRefundNoReplyList(\'%s\', \'%s\', \'%s\')", getYesterDay(), L"CN02", L"BARDCODE PG DAEMON");
+	strQuery.Format(L"select * from FN_GetRefundNoReplyList(\'%s\', \'%s\', \'%s\')", getYesterDay(), L"CN02", L"BARDCODE PG DAEMON");
 	try
 	{
 		_bstr_t	bstrQuery(strQuery);
