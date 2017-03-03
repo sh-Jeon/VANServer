@@ -111,7 +111,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 		m_strCouponOrgCode = szCode;
 	}
 	
-	CString strYesterdayMMDD = getYesterDayMMDD();
+	CString strBatchFileDate = getBatchFileDate();
 
 	// CN01
 	TCHAR szBatchFilePath[MAX_PATH];
@@ -124,7 +124,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	
 	// create file
 	CString strBatchFile;
-	strBatchFile.Format(L"%s\\CN31%s", szBatchFilePath, strYesterdayMMDD);
+	strBatchFile.Format(L"%s\\CN31%s", szBatchFilePath, strBatchFileDate);
 	HANDLE hFile = _CreateBatchFile(strBatchFile);
 
 	_WriteBatchRefundLog(hFile);
@@ -140,7 +140,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	}	
 
 	// create file
-	strBatchFile.Format(L"%s\\CN32%s", szBatchFilePath, strYesterdayMMDD);
+	strBatchFile.Format(L"%s\\CN32%s", szBatchFilePath, strBatchFileDate);
 	hFile = _CreateBatchFile(strBatchFile);
 
 	_WriteBatchRefundNoReplyLog(hFile);
@@ -155,8 +155,16 @@ void CDailyBatchJob::ProcessBatchJob(void)
 		lstrcpy(szBatchFilePath, g_strRegPath);
 	}
 
+
+	// sw1122 파일명은 sw1122YYMMDD001
+	CTime time = CTime::GetCurrentTime();
+	CString currentYear;
+	currentYear.Format(L"%04d", time.GetYear());
+	currentYear.Delete(0, 2);
+	strBatchFileDate.Format(L"%02d%02d%02d", currentYear, time.GetMonth(), time.GetDay());
+
 	// create file
-	strBatchFile.Format(L"%s\\%s%s001", szBatchFilePath, L"sw1122", strYesterdayMMDD);
+	strBatchFile.Format(L"%s\\%s%s001", szBatchFilePath, L"sw1122", strBatchFileDate);
 	hFile = _CreateBatchFile(strBatchFile);
 
 	_WriteBatchCouponNotReplyLog(hFile);
@@ -174,7 +182,7 @@ void CDailyBatchJob::_WriteBatchRefundLog(HANDLE hFile)
 	ST_REFUND_LOG_HEADER stRefundLogHeader;
 	memcpy(stRefundLogHeader.RecordType, "HH", 2);
 	memcpy(stRefundLogHeader.No, "0000000", 7);
-	memcpy(stRefundLogHeader.Date, T2A(getYesterDay()), 8);
+	memcpy(stRefundLogHeader.Date, T2A(BatchFileLogDate()), 8);
 	memcpy(stRefundLogHeader.Code, T2A(m_strOrgCode), 7);
 	memcpy(stRefundLogHeader.ServiceType, "CN31", 4);
 	char space[172];
@@ -233,7 +241,7 @@ void CDailyBatchJob::_WriteBatchRefundNoReplyLog(HANDLE hFile)
 	ST_REFUND_LOG_HEADER stRefundLogHeader;
 	memcpy(stRefundLogHeader.RecordType, "HH", 2);
 	memcpy(stRefundLogHeader.No, "0000000", 7);
-	memcpy(stRefundLogHeader.Date, T2A(getYesterDay()), 8);
+	memcpy(stRefundLogHeader.Date, T2A(BatchFileLogDate()), 8);
 	memcpy(stRefundLogHeader.Code, T2A(m_strOrgCode), 7);
 	memcpy(stRefundLogHeader.ServiceType, "CN32", 4);
 	char space[172];
@@ -294,17 +302,21 @@ void CDailyBatchJob::_WriteBatchCouponNotReplyLog(HANDLE hFile)
 	theApp.GetDBManager()->GetCouponNotReplyList(&vecCouponList);
 
 	int iRecCount = vecCouponList.size();
-	char recCount[8];
-	ZeroMemory(recCount, 8);
-	_snprintf_s(recCount, sizeof(recCount), "%07d", iRecCount);
+
+	CString strRecordCount;
+	strRecordCount.Format(L"%07d", iRecCount);
+
+	//char recCount[8];
+	//ZeroMemory(recCount, 8);
+	//_snprintf_s(recCount, sizeof(recCount), "%07d", iRecCount);
 
 	ST_COUPON_LOG_HEADER stCouponLogHeader;
 	memcpy(stCouponLogHeader.JobType, "SW1122", 6);
 	memcpy(stCouponLogHeader.DataType, "11", 2);
 	memcpy(stCouponLogHeader.SerialNo, "0000000", 7);
 	memcpy(stCouponLogHeader.OrgCode, T2A(m_strCouponOrgCode), 3);
-	memcpy(stCouponLogHeader.Count, recCount, 7);
-	memcpy(stCouponLogHeader.Date, T2A(getYesterDay()), 8);
+	memcpy(stCouponLogHeader.Count, T2A(strRecordCount), 7);
+	memcpy(stCouponLogHeader.Date, T2A(BatchFileLogDate()), 8);
 	char space[267];
 	for (int i=0; i<267; i++) space[i] = ' ';
 	memcpy(stCouponLogHeader.Filler, space, 267);
@@ -319,6 +331,7 @@ void CDailyBatchJob::_WriteBatchCouponNotReplyLog(HANDLE hFile)
 		::WriteFile(hFile, T2A(vecCouponList[i].strSerialNum), 7, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strTradeType), 6, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strReturnCode), 3, &dwWritten, 0);
+		::WriteFile(hFile, T2A(vecCouponList[i].strTradeDate), 8, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strTradeTime), 6, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strTradeUniqueNum), 13, &dwWritten, 0);
 		::WriteFile(hFile, T2A(vecCouponList[i].strBarcodeNum), 20, &dwWritten, 0);
@@ -349,7 +362,7 @@ void CDailyBatchJob::_WriteBatchCouponNotReplyLog(HANDLE hFile)
 	memcpy(stCouponLogFooter.DataType, "33", 2);
 	memcpy(stCouponLogFooter.SerialNo, "9999999", 7);
 	memcpy(stCouponLogFooter.OrgCode, T2A(m_strCouponOrgCode), 3);
-	memcpy(stCouponLogFooter.Count, recCount, 7);
+	memcpy(stCouponLogFooter.Count, T2A(strRecordCount), 7);
 	char spaceFooter[275];
 	for (int i=0; i<275; i++) spaceFooter[i] = ' ';
 	memcpy(stCouponLogFooter.Filler, spaceFooter, 275);
@@ -371,10 +384,10 @@ void CDailyBatchJob::ProcessGenerateVanBillList()
 		lstrcpy(szBatchFilePath, g_strRegPath);
 	}
 
-	CString strYesterdayMMDD = getYesterDayMMDD();
+	CString strBatchFileDate = getBatchFileDate();
 
 	CString strBatchFile;
-	strBatchFile.Format(L"%s\\CN03%s", szBatchFilePath, strYesterdayMMDD);
+	strBatchFile.Format(L"%s\\CN03%s", szBatchFilePath, strBatchFileDate);
 	HANDLE hFile = ::CreateFile(
 				strBatchFile,
 				GENERIC_READ,

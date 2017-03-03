@@ -35,3 +35,15 @@ private:
 	void _WriteBatchRefundNoReplyLog(HANDLE hFile);
 	void _WriteBatchCouponNotReplyLog(HANDLE hFile);
 };
+
+inline CString BatchFileLogDate() 
+{
+	CTime time = CTime::GetCurrentTime();
+    //CTimeSpan span(-1, 0, 0, 0);
+    //time += span;
+
+	CString strBatchFileDate;
+	strBatchFileDate.Format(L"%04d%02d%02d", time.GetYear(), time.GetMonth(), time.GetDay());
+
+	return strBatchFileDate;
+}

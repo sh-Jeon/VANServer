@@ -106,14 +106,15 @@ inline CString getYesterDay()
 	return strYesterDay;
 }
 
-inline CString getYesterDayMMDD() 
+inline CString getBatchFileDate() 
 {
 	CTime time = CTime::GetCurrentTime();
-    CTimeSpan span(-1, 0, 0, 0);
-    time += span;
+    //CTimeSpan span(-1, 0, 0, 0);
+    //time += span;
 
-	CString strYesterDay;
-	strYesterDay.Format(L"%02d%02d", time.GetMonth(), time.GetDay());
+	CString strBatchFileDate;
+	strBatchFileDate.Format(L"%02d%02d", time.GetMonth(), time.GetDay());
 
-	return strYesterDay;
+	return strBatchFileDate;
 }
+
