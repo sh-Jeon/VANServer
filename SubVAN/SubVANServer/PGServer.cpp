@@ -267,9 +267,21 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 			_SaveProcessToDB(pClient, FALSE);
 
 			pVANClient->Close();
+			delete pVANClient;
 
 			return;
 		}
+	} else {
+			pClient->CopyResponseData(pClient->m_pRequest);
+
+			//  POS로 S41응답
+			pClient->SendResultToPOS(RES_ERR_LEN);
+			_SaveProcessToDB(pClient, FALSE);
+
+			pVANClient->Close();
+			delete pVANClient;
+
+			return;
 	}
 	
 	//bRes : TRUE - VAN 서버 접속 성공, FALSE - VAN 서버에 접속을 하지 못함
@@ -304,7 +316,7 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 			char traceNO[9];
 			_snprintf_s(traceNO, 8, "BB%06d", pVANClient->m_PGTraceNO);
 			memcpy(pVANClient->m_pRequest->mTraceNo, traceNO, 8);
-			memcpy(pVANClient->m_pResponse->mTraceNo, traceNO, 8);
+			//memcpy(pVANClient->m_pResponse->mTraceNo, traceNO, 8);
 
 			if (trType == CMD_PURCHASE) {
 				memcpy(pVANClient->m_pRequest->mTelReqType, "0420", 4);
@@ -315,12 +327,29 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 				memcpy(pVANClient->m_pRequest->mTelCode, "810030", 6);
 			}
 
-			if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
-				bRes = pVANClient->SendRequestToVAN(pClient);
+			if (ERROR_OK == pVANClient->MakeVANRequestData(pClient->m_pRequest, TRUE)) {
+				if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
+					bRes = pVANClient->SendRequestToVAN(pClient);
+				} else {
+					pClient->CopyResponseData(pClient->m_pRequest);
+					_SaveProcessToDB(pClient, FALSE);
+
+					pVANClient->Close();
+					delete pVANClient;
+				
+					return;
+				}
+			} else {
+					pClient->CopyResponseData(pClient->m_pRequest);
+					_SaveProcessToDB(pClient, FALSE);
+
+					pVANClient->Close();
+					delete pVANClient;
+
+					return;
 			}
 
 			DWORD dwWait = WaitForSingleObject(pVANClient->m_hWaitVANProcess, VAN_TIMEOUT);
-
 			if (WAIT_TIMEOUT == dwWait) {
 				pVANClient->CopyResponseData(pVANClient->m_pRequest);
 

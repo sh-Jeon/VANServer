@@ -13,7 +13,7 @@ public:
 
 	HANDLE m_hWaitVANProcess;  //  VAN 통신 작업 완료 이벤트
 
-	PG_ERROR_CODE MakeVANRequestData(CTELPacket *packet);
+	PG_ERROR_CODE MakeVANRequestData(CTELPacket *packet, BOOL sysRefund=FALSE);
 	BOOL SendRequestToVAN(CPosClient *pClient);
 
 	virtual BOOL OnReceive(int nErrorCode);

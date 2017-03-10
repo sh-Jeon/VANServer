@@ -30,7 +30,7 @@ CVANClient::CVANClient(void)
 // 전문추적번호 : 8자리,  POS-->PG : POS별,일자별로 유니크(POS+pos번호+일련번호 - P0100001)
 //                        PG-->VAN : (BB######)로 유니크한 넘버 생성 후 전송 (일련번호 index 생성해서 전송) - 응답(FILER)에 앞 8자리에 넣어서 response to POS.
 // POS --> PG : tcp/ip header  : 길이4자리 + SYM으로 올라옴.
-PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet)
+PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet, BOOL sysRefund)
 {
 	if (NULL == m_pRequest) {
 		m_pRequest = new CTELPacket;
@@ -38,7 +38,6 @@ PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet)
 	*m_pRequest = *packet; // POS에서 올라온 data를 일단 복사함.
 
 	memcpy(m_pRequest->m_pktHeader.VAN, "VAN", 3);
-
 	memcpy(m_pRequest->mSystemType, "SMW", 3);
 	memcpy(m_pRequest->mVANCode, "201", 3);  //VAN사 구분코드 "201"
 	
@@ -49,14 +48,38 @@ PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet)
 	char TID[19];
 	_snprintf_s(TID, 18, "%018d", m_PGTraceNO);
 	
-	memcpy(m_pRequest->mTID, m_pRequest->mPurchaseDate, 8);
-	memcpy(m_pRequest->mTID + 8, m_pRequest->mPurchaseTime, 6);
-	memcpy(m_pRequest->mTID, m_pRequest->mTraceNo, 8);
-	memcpy(m_pRequest->mTID, TID, 18);
+	if (FALSE == sysRefund) {
+		int npos = 0;
+		memcpy(m_pRequest->mTID, m_pRequest->mPurchaseDate, 8);
+		npos += 8;
+		memcpy(m_pRequest->mTID + npos, m_pRequest->mPurchaseTime, 6);
+		npos += 6;
+		memcpy(m_pRequest->mTID + npos, m_pRequest->mTraceNo, 8);
+		npos += 8;
+		memcpy(m_pRequest->mTID + npos, TID, 18);
 
-	char traceNO[9];
-	_snprintf_s(traceNO, 8, "BB%06d", m_PGTraceNO);
-	memcpy(m_pRequest->mTraceNo, traceNO, 8);
+		char traceNO[9];
+		_snprintf_s(traceNO, 8, "BB%06d", m_PGTraceNO);
+		memcpy(m_pRequest->mTraceNo, traceNO, 8);
+	} else {
+		SYSTEMTIME cTime;
+		::GetLocalTime(&cTime);
+		
+		char szDate[15];
+		sprintf_s(szDate, "%04d%02d%02d%02d%02d%02d", cTime.wYear, cTime.wMonth, cTime.wDay, cTime.wHour, cTime.wMinute, cTime.wSecond);		
+
+		int npos = 0;
+		memcpy(m_pRequest->mTID, szDate, 14);
+		npos += 14;
+
+		char traceNO[9];
+		_snprintf_s(traceNO, 8, "BB%06d", m_PGTraceNO);
+		memcpy(m_pRequest->mTraceNo, traceNO, 8);
+
+		memcpy(m_pRequest->mTID + npos, m_pRequest->mTraceNo, 8);
+		npos += 8;
+		memcpy(m_pRequest->mTID + npos, TID, 18);
+	}
 
 	ST_MONITOR_LIST_INFO *pListInfo = new ST_MONITOR_LIST_INFO;
 	pListInfo->strIP = m_strServerIP;
