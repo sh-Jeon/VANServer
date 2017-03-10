@@ -75,6 +75,6 @@ public:
 	CEdit m_edtRawData;
 	afx_msg void OnNMDblclkMonList(NMHDR *pNMHDR, LRESULT *pResult);
 	void CheckDoBatchJob();
-	afx_msg void OnBnClickedButton2();
+	afx_msg void OnBnClickedBatchTest();
 	afx_msg void OnBnClickedBillTest();
 };

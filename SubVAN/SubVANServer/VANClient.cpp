@@ -44,14 +44,19 @@ PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet)
 	
 	m_pRequest->mTelReqType[0] = '0';   // PG --> VAN : 9를 0으로 대체
 
+
 	// POS Data가공 후 VAN으로 전송 함.
+	char TID[19];
+	_snprintf_s(TID, 18, "%018d", m_PGTraceNO);
+	
+	memcpy(m_pRequest->mTID, m_pRequest->mPurchaseDate, 8);
+	memcpy(m_pRequest->mTID + 8, m_pRequest->mPurchaseTime, 6);
+	memcpy(m_pRequest->mTID, m_pRequest->mTraceNo, 8);
+	memcpy(m_pRequest->mTID, TID, 18);
+
 	char traceNO[9];
 	_snprintf_s(traceNO, 8, "BB%06d", m_PGTraceNO);
 	memcpy(m_pRequest->mTraceNo, traceNO, 8);
-
-	char TID[41];
-	_snprintf_s(TID, 40, "%040d", m_PGTraceNO);
-	memcpy(m_pRequest->mTID, TID, 40);
 
 	ST_MONITOR_LIST_INFO *pListInfo = new ST_MONITOR_LIST_INFO;
 	pListInfo->strIP = m_strServerIP;

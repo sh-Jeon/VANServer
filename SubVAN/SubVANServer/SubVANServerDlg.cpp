@@ -82,7 +82,7 @@ BEGIN_MESSAGE_MAP(CSubVANServerDlg, CDialog)
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
 	ON_NOTIFY(NM_DBLCLK, IDC_MON_LIST, &CSubVANServerDlg::OnNMDblclkMonList)
-	ON_BN_CLICKED(IDC_BUTTON2, &CSubVANServerDlg::OnBnClickedButton2)
+	ON_BN_CLICKED(IDC_BUTTON2, &CSubVANServerDlg::OnBnClickedBatchTest)
 	ON_BN_CLICKED(IDC_BILL_TEST, &CSubVANServerDlg::OnBnClickedBillTest)
 END_MESSAGE_MAP()
 
@@ -290,17 +290,14 @@ BOOL CSubVANServerDlg::OnInitDialog()
 										IMAGE_ICON, ::GetSystemMetrics(SM_CXSMICON), ::GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
 	}
 
-	CString strTooltip;
-	strTooltip.Format(L"BANK MONEY ½ÇÇà Áß");
 
-	NOTIFYICONDATA nid;
-	
+	NOTIFYICONDATA nid;	
 	ZeroMemory (&nid, sizeof(NOTIFYICONDATA));
 	nid.cbSize = sizeof(NOTIFYICONDATA);
 	nid.hWnd = this->m_hWnd;
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
 	nid.uCallbackMessage = WM_TRAYICON;
-	lstrcpy (nid.szTip, strTooltip);
+	lstrcpy (nid.szTip, szTitle);
 	nid.uID = 0;
 	nid.hIcon = m_hStIcon[0];
 	Shell_NotifyIcon (NIM_ADD, &nid);
@@ -613,12 +610,14 @@ void CSubVANServerDlg::CheckDoBatchJob()
 	}
 }
 
-void CSubVANServerDlg::OnBnClickedButton2()
+void CSubVANServerDlg::OnBnClickedBatchTest()
 {
 	m_DailyBatch.ProcessBatchJob();
+	m_DailyBatch.m_bDoneBatchProcess = FALSE;
 }
 
 void CSubVANServerDlg::OnBnClickedBillTest()
 {
 	m_DailyBatch.ProcessGenerateVanBillList();
+	m_DailyBatch.m_bDoneBillProcess = FALSE;
 }
