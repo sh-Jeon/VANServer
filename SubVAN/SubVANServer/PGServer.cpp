@@ -265,8 +265,8 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 	//bRes : TRUE - VAN 서버 접속 성공, FALSE - VAN 서버에 접속을 하지 못함
 	DWORD dwWait = WaitForSingleObject(pVANClient->m_hWaitVANProcess, VAN_TIMEOUT);
 	if (WAIT_TIMEOUT == dwWait) {
-		_SaveProcessToDB(pVANClient, FALSE);
 		pClient->CopyResponseData(pClient->m_pRequest);
+		_SaveProcessToDB(pClient, FALSE);
 
 		//  POS로 S11응답
 		pClient->SendResultToPOS(RES_TIMEOUT);
