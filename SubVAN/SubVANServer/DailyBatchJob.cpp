@@ -156,7 +156,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	}
 
 
-	// sw1122 파일명은 sw1122YYMMDD001
+	// SW1122 파일명은 SW1122YYMMDD001
 	CTime time = CTime::GetCurrentTime();
 	CString currentYear;
 	currentYear.Format(L"%04d", time.GetYear());
@@ -164,7 +164,7 @@ void CDailyBatchJob::ProcessBatchJob(void)
 	strBatchFileDate.Format(L"%s%02d%02d", currentYear, time.GetMonth(), time.GetDay());
 
 	// create file
-	strBatchFile.Format(L"%s\\%s%s001", szBatchFilePath, L"sw1122", strBatchFileDate);
+	strBatchFile.Format(L"%s\\%s%s001", szBatchFilePath, L"SW1122", strBatchFileDate);
 	hFile = _CreateBatchFile(strBatchFile);
 
 	_WriteBatchCouponNotReplyLog(hFile);
