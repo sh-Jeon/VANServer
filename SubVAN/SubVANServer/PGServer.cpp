@@ -259,6 +259,16 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 
 		if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
 			bRes = pVANClient->SendRequestToVAN(pClient);
+		} else {
+			pClient->CopyResponseData(pClient->m_pRequest);
+
+			//  POS로 S41응답
+			pClient->SendResultToPOS(RES_ERR_NET);
+			_SaveProcessToDB(pClient, FALSE);
+
+			pVANClient->Close();
+
+			return;
 		}
 	}
 	
@@ -266,13 +276,11 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 	DWORD dwWait = WaitForSingleObject(pVANClient->m_hWaitVANProcess, VAN_TIMEOUT);
 	if (WAIT_TIMEOUT == dwWait) {
 		pClient->CopyResponseData(pClient->m_pRequest);
-		_SaveProcessToDB(pClient, FALSE);
 
 		//  POS로 S11응답
 		pClient->SendResultToPOS(RES_TIMEOUT);
 		_SaveProcessToDB(pClient, FALSE);
 
-		// TODO - VAN으로 환불요청
 		pVANClient->Close();
 	} else {
 		_SaveProcessToDB(pVANClient, FALSE);
