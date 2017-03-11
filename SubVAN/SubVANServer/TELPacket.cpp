@@ -132,7 +132,7 @@ void CTELPacket::_setCouponData(int nPtIdx, char *pData)
 	_assignFieldValue(&nPtIdx, NULL, pData, 35);
 }
 
-PG_ERROR_CODE CTELPacket::setPacketData(char *pData)
+RES_CODE CTELPacket::setPacketData(char *pData)
 {
 	memcpy(&m_pktHeader, pData, 7);
 
@@ -177,5 +177,5 @@ PG_ERROR_CODE CTELPacket::setPacketData(char *pData)
 	}
 
 	//filler 70
-	return ERROR_OK;
+	return RES_SUCCESS;
 }

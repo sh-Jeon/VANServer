@@ -12,7 +12,7 @@ public:
 	SOCKET m_sock;
 	CPGServer *m_pPGServer;
 
-	void SendResultToPOS(PG_ERROR_CODE errCode);
+	//void SendResultToPOS(PG_ERROR_CODE errCode);
 	void SendResultToPOS(RES_CODE resCode);
 	void CloseSocket();
 

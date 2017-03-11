@@ -4,31 +4,16 @@
 #include "telpacket.h"
 #include "strsafe.h"
 
-typedef enum {
-	RES_SUCCESS = 0,
-	RES_TIMEOUT,
-	RES_ERR_LEN,
-	RES_ERR_NET,
-	RES_ERR_SYSTEM,
-	RES_ERR_DB_CONN,
-	RES_ERR_DB_DUPL,
-	RES_ERR_DB_TRANSACTION,
-	RES_ERR_DB_QUERY,
-	RES_ERR_PHURCAHSE,
-	RES_ERR_INVALID_FORMAT,
-	RES_FAIL
-}RES_CODE;
-
 class CVANProtocol
 {
 public:
 	CVANProtocol(void);
 	~CVANProtocol(void);
 
-	static PG_ERROR_CODE CheckHeader(int nLenReceived, char *pRecvBuffer) {
+	static RES_CODE CheckHeader(int nLenReceived, char *pRecvBuffer) {
 		int nSizeHeader = sizeof(ST_PKT_HEADER);
 		if (nLenReceived < nSizeHeader) {
-			return ERROR_WAIT;
+			return RES_WAIT;
 		}
 
 		// Header Size : 7 byte (len : 4byte, 'VAN')
@@ -42,14 +27,14 @@ public:
 		int nBodyLen = atol(strBodylen);
 		if (nLenReceived < 4 + nBodyLen)
 		{
-			return ERROR_WAIT;  //body 도착하지 않음.
+			return RES_WAIT;  //body 도착하지 않음.
 		}
 
 		if (nBodyLen < LEN_TEL - 4) {
-			return ERROR_INVALID_LENGTH;
+			return RES_ERR_LEN;
 		}
 
-		return ERROR_OK;
+		return RES_SUCCESS;
 	}
 
 	
@@ -124,9 +109,9 @@ public:
 		}
 	}
 		
-	PG_ERROR_CODE CheckPacketLength(char *pData, int nLen);
-	PG_ERROR_CODE SetRequestData(char *pData, int nLen);
-	PG_ERROR_CODE SetResponseData(char *pData, int nLen);
+	RES_CODE CheckPacketLength(char *pData, int nLen);
+	RES_CODE SetRequestData(char *pData, int nLen);
+	RES_CODE SetResponseData(char *pData, int nLen);
 
 	void CopyResponseData(CTELPacket *pData);
 

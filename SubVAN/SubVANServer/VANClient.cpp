@@ -30,7 +30,7 @@ CVANClient::CVANClient(void)
 // 전문추적번호 : 8자리,  POS-->PG : POS별,일자별로 유니크(POS+pos번호+일련번호 - P0100001)
 //                        PG-->VAN : (BB######)로 유니크한 넘버 생성 후 전송 (일련번호 index 생성해서 전송) - 응답(FILER)에 앞 8자리에 넣어서 response to POS.
 // POS --> PG : tcp/ip header  : 길이4자리 + SYM으로 올라옴.
-PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet, BOOL sysRefund)
+RES_CODE CVANClient::MakeVANRequestData(CTELPacket *packet, BOOL sysRefund)
 {
 	if (NULL == m_pRequest) {
 		m_pRequest = new CTELPacket;
@@ -91,7 +91,7 @@ PG_ERROR_CODE CVANClient::MakeVANRequestData(CTELPacket *packet, BOOL sysRefund)
 
 	AfxGetApp()->m_pMainWnd->PostMessage(WM_ADD_REQUEST_ITEM, (WPARAM)-1, (LPARAM)pListInfo);
 
-	return ERROR_OK;
+	return RES_SUCCESS;
 }
 
 CVANClient::~CVANClient(void)
@@ -260,8 +260,8 @@ BOOL CVANClient::OnReceive(int nErrorCode)
 			}
 		}
 
-		PG_ERROR_CODE result = CVANProtocol::CheckHeader(nRecvTotal, buf);
-		if (ERROR_OK == result)
+		RES_CODE result = CVANProtocol::CheckHeader(nRecvTotal, buf);
+		if (RES_SUCCESS == result)
 		{
 			ST_MONITOR_LIST_INFO *pListInfo = new ST_MONITOR_LIST_INFO;
 			pListInfo->strIP = m_strServerIP;
@@ -273,7 +273,7 @@ BOOL CVANClient::OnReceive(int nErrorCode)
 			AfxGetApp()->m_pMainWnd->PostMessage(WM_ADD_RESPONSE_ITEM, (WPARAM)-1, (LPARAM)pListInfo);
 
 			result = SetResponseData(buf, nRecvTotal);
-			if (ERROR_OK == result) {			
+			if (RES_SUCCESS == result) {			
 			
 			} else {
 					// invalid format.

@@ -185,7 +185,7 @@ unsigned int __stdcall CPGServer::ClientWorkerThread(void *param) {
 	int iResult = -1;
 	int nReceived = 0;
 
-	PG_ERROR_CODE result = ERROR_WAIT;
+	RES_CODE result = RES_TIMEOUT;
 	do {
 		iResult = 0;
 		char recvBuffer[MAX_BUFFER];
@@ -198,7 +198,7 @@ unsigned int __stdcall CPGServer::ClientWorkerThread(void *param) {
 			nReceived += iResult;
 
 			result = CVANProtocol::CheckHeader(nReceived, pDataBuffer);
-			if (ERROR_OK == result)
+			if (RES_SUCCESS == result)
 			{
 				theApp.AddLog("POS->PG:%s", pDataBuffer);
 				result = pClient->SetRequestData(pDataBuffer, nReceived);
@@ -206,7 +206,7 @@ unsigned int __stdcall CPGServer::ClientWorkerThread(void *param) {
 				break;
 			}
 
-			if (ERROR_WAIT != iResult) break;
+			if (RES_WAIT != iResult) break;
 		}
 		else if (iResult == 0) {
 //			Connection closing...
@@ -254,7 +254,7 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 	pClient->m_PGTraceNO = m_sPGTraceNO;
 	pVANClient->m_PGTraceNO = m_sPGTraceNO;
 
-	if (ERROR_OK == pVANClient->MakeVANRequestData(pClient->m_pRequest)) {
+	if (RES_SUCCESS == pVANClient->MakeVANRequestData(pClient->m_pRequest)) {
 		_SaveProcessToDB(pVANClient, TRUE);
 
 		if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
@@ -293,85 +293,78 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 		pClient->SendResultToPOS(RES_TIMEOUT);
 		_SaveProcessToDB(pClient, FALSE);
 
-		pVANClient->Close();
+		_ProcessSystemRefund(pClient);
 	} else {
 		_SaveProcessToDB(pVANClient, FALSE);
 		pClient->CopyResponseData(pVANClient->m_pResponse);
-
 		pClient->SendResultToPOS(RES_SUCCESS);
 		_SaveProcessToDB(pClient, FALSE);
 	}
 
-	//////////////////////////////////////////////////////////
-	// Time out이 난 경우 시스템 환불처리 한번 더 필요.
-	//////////////////////////////////////////////////////////
-	if (WAIT_TIMEOUT == dwWait) {
-		ResetEvent(pVANClient->m_hWaitVANProcess);
-
-		TR_TYPE trType = CVANProtocol::checkTRFromat(pVANClient->m_pRequest->mTelCode);
-		// 시스템 환불코드
-		if (trType == CMD_PURCHASE || trType == CMD_REFUND) {
-			pVANClient->m_PGTraceNO = GetNewPGTraceNO();
-
-			char traceNO[9];
-			_snprintf_s(traceNO, 8, "BB%06d", pVANClient->m_PGTraceNO);
-			memcpy(pVANClient->m_pRequest->mTraceNo, traceNO, 8);
-			//memcpy(pVANClient->m_pResponse->mTraceNo, traceNO, 8);
-
-			if (trType == CMD_PURCHASE) {
-				memcpy(pVANClient->m_pRequest->mTelReqType, "0420", 4);
-			}
-
-			if (trType == CMD_REFUND) {
-				memcpy(pVANClient->m_pRequest->mTelReqType, "0500", 4);
-				memcpy(pVANClient->m_pRequest->mTelCode, "810030", 6);
-			}
-
-			if (ERROR_OK == pVANClient->MakeVANRequestData(pClient->m_pRequest, TRUE)) {
-				if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
-					bRes = pVANClient->SendRequestToVAN(pClient);
-				} else {
-					pClient->CopyResponseData(pClient->m_pRequest);
-					_SaveProcessToDB(pClient, FALSE);
-
-					pVANClient->Close();
-					delete pVANClient;
-				
-					return;
-				}
-			} else {
-					pClient->CopyResponseData(pClient->m_pRequest);
-					_SaveProcessToDB(pClient, FALSE);
-
-					pVANClient->Close();
-					delete pVANClient;
-
-					return;
-			}
-
-			DWORD dwWait = WaitForSingleObject(pVANClient->m_hWaitVANProcess, VAN_TIMEOUT);
-			if (WAIT_TIMEOUT == dwWait) {
-				pVANClient->CopyResponseData(pVANClient->m_pRequest);
-
-				char traceNO[9];
-				_snprintf_s(traceNO, 8, "BB%06d", pVANClient->m_PGTraceNO);
-				memcpy(pVANClient->m_pResponse->mTraceNo, traceNO, 8);
-
-				CVANProtocol::setResponseErrorCode(pVANClient->m_pResponse->mTelRespType, RES_TIMEOUT);
-			}
-
-			// VAN 처리에 대한 응답을 DB에 기록
-			_SaveProcessToDB(pVANClient, FALSE);
-		}
-	}
-
+	pVANClient->Close();
 	delete pVANClient;
 }
 
-void CPGServer::ProcessVAN(PG_ERROR_CODE errCode, CPosClient *pClient) 
+
+//////////////////////////////////////////////////////////
+// Time out이 난 경우 시스템 환불처리 한번 더 필요.
+//////////////////////////////////////////////////////////
+void CPGServer::_ProcessSystemRefund(CPosClient *pClient) 
+{
+	CVANClient *pVANClient = new CVANClient();
+
+	TR_TYPE trType = CVANProtocol::checkTRFromat(pVANClient->m_pRequest->mTelCode);
+	// 시스템 환불코드
+	if (trType == CMD_PURCHASE || trType == CMD_REFUND) {
+		pVANClient->m_PGTraceNO = GetNewPGTraceNO();
+
+		char traceNO[9];
+		_snprintf_s(traceNO, 8, "BB%06d", pVANClient->m_PGTraceNO);
+		memcpy(pVANClient->m_pRequest->mTraceNo, traceNO, 8);
+
+		pClient->m_PGTraceNO = pVANClient->m_PGTraceNO;
+
+		if (trType == CMD_PURCHASE) {
+			memcpy(pVANClient->m_pRequest->mTelReqType, "0420", 4);
+		}
+		if (trType == CMD_REFUND) {
+			memcpy(pVANClient->m_pRequest->mTelReqType, "0500", 4);
+			memcpy(pVANClient->m_pRequest->mTelCode, "810030", 6);
+		}
+
+		if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
+			pVANClient->SendRequestToVAN(pClient);
+		} else {
+			pClient->CopyResponseData(pClient->m_pRequest);
+			pClient->SendResultToPOS(RES_ERR_NET);
+			_SaveProcessToDB(pClient, FALSE);
+
+			pVANClient->Close();
+			delete pVANClient;
+		
+			return;
+		}
+
+		DWORD dwWait = WaitForSingleObject(pVANClient->m_hWaitVANProcess, VAN_TIMEOUT);
+		if (WAIT_TIMEOUT == dwWait) {
+			pVANClient->CopyResponseData(pVANClient->m_pRequest);
+
+			char traceNO[9];
+			_snprintf_s(traceNO, 8, "BB%06d", pVANClient->m_PGTraceNO);
+			memcpy(pVANClient->m_pResponse->mTraceNo, traceNO, 8);
+
+			CVANProtocol::setResponseErrorCode(pVANClient->m_pResponse->mTelRespType, RES_TIMEOUT);
+		}
+
+		// VAN 처리에 대한 응답을 DB에 기록
+		_SaveProcessToDB(pVANClient, FALSE);
+	}
+}
+
+void CPGServer::ProcessVAN(RES_CODE errCode, CPosClient *pClient) 
 {
 	USES_CONVERSION;
-	if (ERROR_OK == errCode) {
+	if (RES_SUCCESS == errCode) {
 		if (pClient->m_pRequest) {
 			_StartVANProcess(pClient);
 

@@ -17,19 +17,10 @@ typedef struct
 	CString strTel;
 }ST_MONITOR_LIST_INFO;
 
-typedef enum
-{
-	ERROR_OK = 0,
-	ERROR_VAN_NORESPONSE,
-	ERROR_INVALID_LENGTH,
-	ERROR_WAIT,
-	ERROR_ETC
-}PG_ERROR_CODE;
-
-	//FORMAT1. 구매(0200/000030), 시스템환불(0420/000030), 
-	//FORMAT2. 쿠폰승인(0200/000300)
-	//FORMAT3. 환불(0200/200030), 환불내역확인(0500/810030)
-	//FORMAT4. 쿠폰상태확인(0200/000310)
+//FORMAT1. 구매(0200/000030), 시스템환불(0420/000030), 
+//FORMAT2. 쿠폰승인(0200/000300)
+//FORMAT3. 환불(0200/200030), 환불내역확인(0500/810030)
+//FORMAT4. 쿠폰상태확인(0200/000310)
 typedef enum
 {
 	CMD_PURCHASE,
@@ -38,6 +29,22 @@ typedef enum
 	CMD_COUPON_STAUTS,
 	CMD_INVALID
 }TR_TYPE;
+
+typedef enum {
+	RES_SUCCESS = 0,
+	RES_WAIT,
+	RES_TIMEOUT,
+	RES_ERR_LEN,
+	RES_ERR_NET,
+	RES_ERR_SYSTEM,
+	RES_ERR_DB_CONN,
+	RES_ERR_DB_DUPL,
+	RES_ERR_DB_TRANSACTION,
+	RES_ERR_DB_QUERY,
+	RES_ERR_PHURCAHSE,
+	RES_ERR_INVALID_FORMAT,
+	RES_FAIL
+}RES_CODE;
 
 #define LEN_TEL 557
 
@@ -54,7 +61,7 @@ public:
 	CTELPacket(void);
 	~CTELPacket(void);
 
-	PG_ERROR_CODE setPacketData(char *pData);
+	RES_CODE setPacketData(char *pData);
 	void _setPurchaseData(int nPtIdx, char *pData);
 	void _setCouponPurchaseData(int nPtIdx, char *pData);
 	void _setRefundData(int nPtIdx, char *pData);

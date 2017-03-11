@@ -23,8 +23,9 @@ public:
 
 private:
 	void _SaveProcessToDB(CVANProtocol *pClient, BOOL bRequest);
-	void ProcessVAN(PG_ERROR_CODE errCode, CPosClient *pClient);
+	void ProcessVAN(RES_CODE errCode, CPosClient *pClient);
 	void _StartVANProcess(CPosClient *pClient);
+	void _ProcessSystemRefund(CPosClient *pClient);
 
 	DWORD m_dwTimeOut;
 

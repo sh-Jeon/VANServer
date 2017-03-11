@@ -42,10 +42,10 @@ void CVANProtocol::_assignFieldValue(int *pos, char* pdata, char *value, int nLe
 	*pos += nLen;
 }
 
-PG_ERROR_CODE CVANProtocol::CheckPacketLength(char *pData, int nLen)
+RES_CODE CVANProtocol::CheckPacketLength(char *pData, int nLen)
 {
 	if (nLen < sizeof(ST_PKT_HEADER)) {
-		return ERROR_WAIT;
+		return RES_WAIT;
 	}
 
 	ST_PKT_HEADER stRecvHeader;   
@@ -57,18 +57,18 @@ PG_ERROR_CODE CVANProtocol::CheckPacketLength(char *pData, int nLen)
     int nBodyLen = atol(strBodylen);
 	if (nLen < 4 + nBodyLen)
 	{
-		return ERROR_WAIT;  //body 도착하지 않음.
+		return RES_WAIT;  //body 도착하지 않음.
 	}
 
-	return ERROR_OK;
+	return RES_SUCCESS;
 }
 
-PG_ERROR_CODE CVANProtocol::SetRequestData(char *pData, int nLen)
+RES_CODE CVANProtocol::SetRequestData(char *pData, int nLen)
 {
 	USES_CONVERSION;
 
-	PG_ERROR_CODE chkLen = CheckPacketLength(pData, nLen);
-	if (ERROR_OK != chkLen) {
+	RES_CODE chkLen = CheckPacketLength(pData, nLen);
+	if (RES_SUCCESS != chkLen) {
 		return chkLen;
 	}
 
@@ -88,15 +88,15 @@ PG_ERROR_CODE CVANProtocol::SetRequestData(char *pData, int nLen)
 
 	AfxGetApp()->m_pMainWnd->PostMessage(WM_ADD_REQUEST_ITEM, (WPARAM)m_dwRequestListRow, (LPARAM)pListInfo);
 	
-	return ERROR_OK;
+	return RES_SUCCESS;
 }
 
-PG_ERROR_CODE CVANProtocol::SetResponseData(char *pData, int nLen) 
+RES_CODE CVANProtocol::SetResponseData(char *pData, int nLen) 
 {
 	USES_CONVERSION;
 
-	PG_ERROR_CODE chkLen = CheckPacketLength(pData, nLen);
-	if (ERROR_OK != chkLen) {
+	RES_CODE chkLen = CheckPacketLength(pData, nLen);
+	if (RES_SUCCESS != chkLen) {
 		return chkLen;
 	}
 
@@ -109,5 +109,5 @@ PG_ERROR_CODE CVANProtocol::SetResponseData(char *pData, int nLen)
 
 	m_pResponse->setPacketData(pData);
 
-	return ERROR_OK;
+	return RES_SUCCESS;
 }

@@ -106,6 +106,7 @@ TR_TYPE CPosClient::_MakeCmdResponsePacket(char *pData)
 	return trType;
 }
 
+/*
 void CPosClient::SendResultToPOS(PG_ERROR_CODE errCode)
 {
 	char *pSendData = new char[LEN_TEL+1];
@@ -139,7 +140,7 @@ void CPosClient::SendResultToPOS(PG_ERROR_CODE errCode)
 
 	delete pSendData;
 }
-
+*/
 void CPosClient::SendResultToPOS(RES_CODE resCode)
 {
 	USES_CONVERSION;
