@@ -287,7 +287,7 @@ void CPGServer::_StartVANProcess(CPosClient *pClient)
 	//bRes : TRUE - VAN 서버 접속 성공, FALSE - VAN 서버에 접속을 하지 못함
 	DWORD dwWait = WaitForSingleObject(pVANClient->m_hWaitVANProcess, VAN_TIMEOUT);
 	if (WAIT_TIMEOUT == dwWait) {
-		pClient->CopyResponseData(pClient->m_pRequest);
+		pClient->CopyResponseData(pVANClient->m_pRequest);
 
 		//  POS로 S11응답
 		pClient->SendResultToPOS(RES_TIMEOUT);
@@ -313,10 +313,12 @@ void CPGServer::_ProcessSystemRefund(CPosClient *pClient)
 {
 	CVANClient *pVANClient = new CVANClient();
 
-	TR_TYPE trType = CVANProtocol::checkTRFromat(pVANClient->m_pRequest->mTelCode);
+	TR_TYPE trType = CVANProtocol::checkTRFromat(pClient->m_pRequest->mTelCode);
 	// 시스템 환불코드
 	if (trType == CMD_PURCHASE || trType == CMD_REFUND) {
 		pVANClient->m_PGTraceNO = GetNewPGTraceNO();
+
+		pVANClient->MakeVANRequestData(pClient->m_pRequest);
 
 		char traceNO[9];
 		_snprintf_s(traceNO, 8, "BB%06d", pVANClient->m_PGTraceNO);
@@ -332,6 +334,7 @@ void CPGServer::_ProcessSystemRefund(CPosClient *pClient)
 			memcpy(pVANClient->m_pRequest->mTelCode, "810030", 6);
 		}
 
+		ResetEvent(pVANClient->m_hWaitVANProcess);
 		if (COMM_ERROR_SUCCESS == pVANClient->ConnectEx()) {
 			pVANClient->SendRequestToVAN(pClient);
 		} else {
@@ -359,6 +362,9 @@ void CPGServer::_ProcessSystemRefund(CPosClient *pClient)
 		// VAN 처리에 대한 응답을 DB에 기록
 		_SaveProcessToDB(pVANClient, FALSE);
 	}
+
+	pVANClient->Close();
+	delete pVANClient;
 }
 
 void CPGServer::ProcessVAN(RES_CODE errCode, CPosClient *pClient) 

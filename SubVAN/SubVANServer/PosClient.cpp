@@ -174,6 +174,11 @@ void CPosClient::SendResultToPOS(RES_CODE resCode)
 	///
 
 	ZeroMemory(szListData, 20);
+
+	if (resCode != RES_SUCCESS) {
+		m_pResponse->mTelReqType[2] = '1';
+	}
+
 	memcpy(szListData, m_pResponse->mTelReqType, 4);
 	pListInfo->strTelType = A2W(szListData);
 

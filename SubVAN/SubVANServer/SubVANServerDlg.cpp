@@ -592,7 +592,7 @@ void CSubVANServerDlg::CheckDoBatchJob()
 		SYSTEMTIME cTime;
 		::GetLocalTime(&cTime);
 
-		if (cTime.wHour == 0 && cTime.wMinute > 30 && FALSE == m_DailyBatch.m_bDoneBatchProcess) {
+		if (cTime.wHour == 0 && cTime.wMinute > 15 && FALSE == m_DailyBatch.m_bDoneBatchProcess) {
 			m_DailyBatch.ProcessBatchJob();
 		}
 
