@@ -413,7 +413,7 @@ void CDailyBatchJob::ProcessGenerateVanBillList()
 	CString strBatchFileDate = getBatchFileDate();
 
 	CString strBatchFile;
-	strBatchFile.Format(L"%s\\CN03%s", szBatchFilePath, strBatchFileDate);
+	strBatchFile.Format(L"%s\\CN33%s", szBatchFilePath, strBatchFileDate);
 	HANDLE hFile = ::CreateFile(
 				strBatchFile,
 				GENERIC_READ,
