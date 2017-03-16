@@ -262,7 +262,7 @@
 			OutputDirectory="$(SolutionDir)$(PlatformName)\$(ConfigurationName)"
 			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
 			ConfigurationType="1"
-			UseOfMFC="1"
+			UseOfMFC="2"
 			CharacterSet="1"
 			WholeProgramOptimization="1"
 			>
@@ -290,7 +290,7 @@
 				EnableIntrinsicFunctions="true"
 				PreprocessorDefinitions="WIN64;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
